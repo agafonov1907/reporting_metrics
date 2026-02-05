@@ -47,13 +47,44 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function generateReport(metric) {
-    try {
-      const templateContent = await loadTemplate('report_template.docx');
-      
-      const data = {
-        metric_value: metric.value,
-        current_date: formatOfficialDate(new Date())
-      };
+  try {
+    console.log('Загрузка шаблона report_template.docx...');
+    const templateContent = await loadTemplate('report_template.docx');
+    
+    const data = {
+      metric_value: metric.value,
+      current_date: formatOfficialDate(new Date())
+    };
+
+    const zip = new PizZip(templateContent);
+    const doc = new Docxtemplater(zip, {
+      paragraphLoop: true,
+      lineBreaks: true,
+      nullGetter: () => ''
+    });
+
+    doc.setData(data);
+    doc.render();
+
+    const blob = doc.getZip().generate({
+      type: 'blob',
+      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    });
+
+    console.log('Скачивание файла...');
+    saveAs(blob, `Отчёт_ПО_${metric.period}.docx`);
+
+  } catch (error) {
+    let msg = 'Неизвестная ошибка';
+    if (error.properties && error.properties.errors instanceof Array) {
+      msg = error.properties.errors.map(err => err.reason).join('\n');
+    } else {
+      msg = error.message || error.toString();
+    }
+    alert('❌ Ошибка генерации отчёта:\n\n' + msg);
+    console.error('Ошибка генерации:', error);
+  }
+}
 
       const zip = new PizZip(templateContent);
       const doc = new Docxtemplater(zip, {
