@@ -16,6 +16,19 @@ document.addEventListener('DOMContentLoaded', () => {
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   document.getElementById('metricPeriod').value = currentMonth;
 
+  // Проверка загрузки библиотек
+  function checkLibrariesLoaded() {
+    if (typeof PizZip === 'undefined') {
+      console.error('PizZip не загружен!');
+      return false;
+    }
+    if (typeof docxtemplater === 'undefined') {
+      console.error('docxtemplater не загружен!');
+      return false;
+    }
+    return true;
+  }
+
   function saveMetrics() {
     localStorage.setItem('metrics', JSON.stringify(metrics));
     renderMetrics();
@@ -35,12 +48,21 @@ document.addEventListener('DOMContentLoaded', () => {
           throw new Error(`Не удалось загрузить шаблон: ${response.status} ${response.statusText}`);
         }
         return response.arrayBuffer();
+      })
+      .catch(error => {
+        console.error('Ошибка загрузки шаблона:', error);
+        throw new Error(`Не удалось загрузить шаблон DOCX: ${error.message}`);
       });
   }
 
   // Генерация отчёта
   async function generateReport(metric) {
     try {
+      // Проверяем загружены ли библиотеки
+      if (!checkLibrariesLoaded()) {
+        throw new Error('Библиотеки для генерации DOCX не загружены. Проверьте подключение скриптов.');
+      }
+
       const templateArrayBuffer = await loadTemplate('report_template.docx');
 
       const data = {
@@ -49,11 +71,12 @@ document.addEventListener('DOMContentLoaded', () => {
           day: '2-digit',
           month: '2-digit',
           year: 'numeric'
-        }) // → "06.02.2026"
+        })
       };
 
+      // Используем правильные имена классов
       const zip = new PizZip(templateArrayBuffer);
-      const doc = new Docxtemplater(zip, {
+      const doc = new docxtemplater(zip, {
         paragraphLoop: true,
         lineBreaks: true,
         nullGetter: () => ''
@@ -87,8 +110,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (error.properties?.errors) {
         msg = error.properties.errors.map(e => e.reason).join('\n');
       }
-      alert('❌ Ошибка генерации отчёта:\n' + msg);
-      console.error('Ошибка:', error);
+      
+      // Более информативное сообщение об ошибке
+      console.error('Полная ошибка генерации отчёта:', error);
+      
+      if (msg.includes('PizZip') || msg.includes('docxtemplater')) {
+        alert('❌ Ошибка: Библиотеки для работы с DOCX не загружены.\n\n' +
+              'Пожалуйста:\n' +
+              '1. Проверьте подключение к интернету\n' +
+              '2. Обновите страницу\n' +
+              '3. Если проблема сохраняется, свяжитесь с поддержкой');
+      } else {
+        alert('❌ Ошибка генерации отчёта:\n' + msg);
+      }
     }
   }
 
@@ -106,6 +140,10 @@ document.addEventListener('DOMContentLoaded', () => {
       const card = document.createElement('div');
       card.className = 'metric-card';
       const displayPeriod = formatPeriod(metric.period);
+      
+      // Проверяем доступность генерации отчетов
+      const canGenerateReport = checkLibrariesLoaded();
+      
       card.innerHTML = `
         <div>
           <div class="metric-name">${escapeHtml(metric.name)}</div>
@@ -115,7 +153,9 @@ document.addEventListener('DOMContentLoaded', () => {
           <span class="metric-value">${escapeHtml(metric.value)}</span>
           <button class="delete-btn" data-index="${index}">×</button>
         </div>
-        <button class="report-btn" data-index="${index}">📄</button>
+        <button class="report-btn" data-index="${index}" ${!canGenerateReport ? 'title="Генерация отчетов недоступна" disabled' : ''}>
+          📄
+        </button>
       `;
       metricsList.appendChild(card);
 
@@ -124,6 +164,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }, 100 * index);
     });
 
+    // Обработчики для кнопок удаления
     document.querySelectorAll('.delete-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.index, 10);
@@ -132,7 +173,8 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    document.querySelectorAll('.report-btn').forEach(btn => {
+    // Обработчики для кнопок генерации отчетов
+    document.querySelectorAll('.report-btn:not(:disabled)').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.index, 10);
         const metric = metrics[idx];
@@ -216,5 +258,17 @@ document.addEventListener('DOMContentLoaded', () => {
     return div.innerHTML;
   }
 
-  renderMetrics();
+  // Проверяем загрузку библиотек при старте
+  console.log('PizZip loaded:', typeof PizZip !== 'undefined');
+  console.log('docxtemplater loaded:', typeof docxtemplater !== 'undefined');
+  
+  // Небольшая задержка для гарантированной загрузки библиотек
+  setTimeout(() => {
+    renderMetrics();
+    
+    // Если библиотеки не загружены, показываем предупреждение
+    if (!checkLibrariesLoaded()) {
+      console.warn('Библиотеки для работы с DOCX не загружены. Функция генерации отчетов недоступна.');
+    }
+  }, 100);
 });
