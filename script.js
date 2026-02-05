@@ -27,6 +27,15 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${MONTHS_RU[monthIndex]} ${year}`;
   }
 
+  // === ФОРМАТИРОВАНИЕ ДАТЫ В ВИДЕ: «от «06» февраля 2026 г.» ===
+  function formatOfficialDate(date) {
+    const day = String(date.getDate()).padStart(2, '0');
+    const monthIndex = date.getMonth();
+    const year = date.getFullYear();
+    const monthName = MONTHS_RU[monthIndex].toLowerCase();
+    return `от «${day}» ${monthName} ${year} г.`;
+  }
+
   // === ГЕНЕРАЦИЯ .DOCX ОТЧЁТА ===
   function loadTemplate(url) {
     return new Promise((resolve, reject) => {
@@ -42,10 +51,8 @@ document.addEventListener('DOMContentLoaded', () => {
       const templateContent = await loadTemplate('report_template.docx');
       
       const data = {
-        metric_name: metric.name,
-        metric_period: formatPeriod(metric.period),
         metric_value: metric.value,
-        current_date: new Date().toLocaleDateString('ru-RU')
+        current_date: formatOfficialDate(new Date())
       };
 
       const zip = new PizZip(templateContent);
@@ -63,7 +70,7 @@ document.addEventListener('DOMContentLoaded', () => {
         mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
       });
 
-      saveAs(blob, `Отчёт_${sanitizeFilename(metric.name)}_${metric.period}.docx`);
+      saveAs(blob, `Отчёт_ПО_${metric.period}.docx`);
 
     } catch (error) {
       alert('Ошибка генерации отчёта:\n' + (error.message || error));
