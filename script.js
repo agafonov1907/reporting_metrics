@@ -27,15 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${MONTHS_RU[monthIndex]} ${year}`;
   }
 
-  // === ФОРМАТ ДАТЫ: dd.mm.yyyy (например: 06.02.2026) ===
-  function formatDateDDMMYYYY(date) {
-    const day = String(date.getDate()).padStart(2, '0');
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const year = date.getFullYear();
-    return `${day}.${month}.${year}`;
-  }
-
-  // === ГЕНЕРАЦИЯ .DOCX ОТЧЁТА ===
+  // === ГЕНЕРАЦИЯ ОТЧЁТА ===
   function loadTemplate(url) {
     return new Promise((resolve, reject) => {
       PizZipUtils.getBinaryContent(url, (error, content) => {
@@ -47,12 +39,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   async function generateReport(metric) {
     try {
-      console.log('Загрузка шаблона report_template.docx...');
       const templateContent = await loadTemplate('report_template.docx');
 
       const data = {
         metric_value: metric.value,
-        current_date: formatDateDDMMYYYY(new Date())
+        current_date: new Date().toLocaleDateString('ru-RU', {
+          day: '2-digit',
+          month: '2-digit',
+          year: 'numeric'
+        }) // → "06.02.2026"
       };
 
       const zip = new PizZip(templateContent);
@@ -70,22 +65,33 @@ document.addEventListener('DOMContentLoaded', () => {
         mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
       });
 
-      console.log('Скачивание отчёта...');
-      saveAs(blob, `Отчёт_ПО_${metric.period}.docx`);
+      if (blob.size === 0) {
+        throw new Error('Сгенерированный файл пуст');
+      }
+
+      // Надёжное скачивание
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `Отчёт_ПО_${metric.period}.docx`;
+      document.body.appendChild(a);
+      a.click();
+      setTimeout(() => {
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }, 100);
 
     } catch (error) {
-      let msg = 'Неизвестная ошибка';
-      if (error.properties && error.properties.errors instanceof Array) {
-        msg = error.properties.errors.map(err => err.reason).join('\n');
-      } else {
-        msg = error.message || error.toString();
+      let msg = error.message || 'Неизвестная ошибка';
+      if (error.properties?.errors) {
+        msg = error.properties.errors.map(e => e.reason).join('\n');
       }
-      alert('❌ Ошибка генерации отчёта:\n\n' + msg);
+      alert('❌ Ошибка генерации отчёта:\n' + msg);
       console.error('Ошибка:', error);
     }
   }
 
-  // === РЕНДЕРИНГ КАРТОЧЕК ===
+  // === РЕНДЕРИНГ ===
   function renderMetrics() {
     metricsList.innerHTML = '';
     if (metrics.length === 0) {
