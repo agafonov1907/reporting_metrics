@@ -27,19 +27,21 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${MONTHS_RU[monthIndex]} ${year}`;
   }
 
-  // === ГЕНЕРАЦИЯ ОТЧЁТА ===
+  // === ЗАГРУЗКА ШАБЛОНА ЧЕРЕЗ FETCH ===
   function loadTemplate(url) {
-    return new Promise((resolve, reject) => {
-      PizZipUtils.getBinaryContent(url, (error, content) => {
-        if (error) reject(error);
-        else resolve(content);
+    return fetch(url)
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Не удалось загрузить шаблон: ${response.status} ${response.statusText}`);
+        }
+        return response.arrayBuffer();
       });
-    });
   }
 
+  // === ГЕНЕРАЦИЯ ОТЧЁТА ===
   async function generateReport(metric) {
     try {
-      const templateContent = await loadTemplate('report_template.docx');
+      const templateArrayBuffer = await loadTemplate('report_template.docx');
 
       const data = {
         metric_value: metric.value,
@@ -50,7 +52,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }) // → "06.02.2026"
       };
 
-      const zip = new PizZip(templateContent);
+      const zip = new PizZip(templateArrayBuffer);
       const doc = new Docxtemplater(zip, {
         paragraphLoop: true,
         lineBreaks: true,
@@ -69,7 +71,7 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('Сгенерированный файл пуст');
       }
 
-      // Надёжное скачивание
+      // Скачивание через ссылку
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -91,7 +93,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // === РЕНДЕРИНГ ===
+  // === РЕНДЕРИНГ КАРТОЧЕК ===
   function renderMetrics() {
     metricsList.innerHTML = '';
     if (metrics.length === 0) {
