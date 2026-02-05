@@ -5,34 +5,77 @@ document.addEventListener('DOMContentLoaded', () => {
   const importFile = document.getElementById('importFile');
   const clearBtn = document.getElementById('clearBtn');
 
-  // Месяцы на русском
   const MONTHS_RU = [
     'Январь', 'Февраль', 'Март', 'Апрель', 'Май', 'Июнь',
     'Июль', 'Август', 'Сентябрь', 'Октябрь', 'Ноябрь', 'Декабрь'
   ];
 
-  // Загрузка данных из localStorage
   let metrics = JSON.parse(localStorage.getItem('metrics')) || [];
 
-  // Установка текущего месяца по умолчанию
   const now = new Date();
   const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
   document.getElementById('metricPeriod').value = currentMonth;
 
-  // Сохранение и рендеринг
   function saveMetrics() {
     localStorage.setItem('metrics', JSON.stringify(metrics));
     renderMetrics();
   }
 
-  // Форматирование периода: "2026-02" → "Февраль 2026"
   function formatPeriod(periodStr) {
     const [year, month] = periodStr.split('-');
     const monthIndex = parseInt(month, 10) - 1;
     return `${MONTHS_RU[monthIndex]} ${year}`;
   }
 
-  // Рендеринг списка показателей
+  // === ГЕНЕРАЦИЯ .DOCX ОТЧЁТА ===
+  function loadTemplate(url) {
+    return new Promise((resolve, reject) => {
+      PizZipUtils.getBinaryContent(url, (error, content) => {
+        if (error) reject(error);
+        else resolve(content);
+      });
+    });
+  }
+
+  async function generateReport(metric) {
+    try {
+      const templateContent = await loadTemplate('report_template.docx');
+      
+      const data = {
+        metric_name: metric.name,
+        metric_period: formatPeriod(metric.period),
+        metric_value: metric.value,
+        current_date: new Date().toLocaleDateString('ru-RU')
+      };
+
+      const zip = new PizZip(templateContent);
+      const doc = new Docxtemplater(zip, {
+        paragraphLoop: true,
+        lineBreaks: true,
+        nullGetter: () => ''
+      });
+
+      doc.setData(data);
+      doc.render();
+
+      const blob = doc.getZip().generate({
+        type: 'blob',
+        mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+      });
+
+      saveAs(blob, `Отчёт_${sanitizeFilename(metric.name)}_${metric.period}.docx`);
+
+    } catch (error) {
+      alert('Ошибка генерации отчёта:\n' + (error.message || error));
+      console.error(error);
+    }
+  }
+
+  function sanitizeFilename(name) {
+    return name.replace(/[<>:"/\\|?*]/g, '_').substring(0, 50);
+  }
+
+  // === РЕНДЕРИНГ ===
   function renderMetrics() {
     metricsList.innerHTML = '';
     if (metrics.length === 0) {
@@ -40,10 +83,7 @@ document.addEventListener('DOMContentLoaded', () => {
       return;
     }
 
-    // Сортировка: новые периоды выше
-    const sorted = [...metrics].sort((a, b) => {
-      return b.period.localeCompare(a.period) || a.name.localeCompare(b.name);
-    });
+    const sorted = [...metrics].sort((a, b) => b.period.localeCompare(a.period) || a.name.localeCompare(b.name));
 
     sorted.forEach((metric, index) => {
       const card = document.createElement('div');
@@ -62,13 +102,11 @@ document.addEventListener('DOMContentLoaded', () => {
       `;
       metricsList.appendChild(card);
 
-      // Анимация появления с задержкой
       setTimeout(() => {
         card.classList.add('visible');
       }, 100 * index);
     });
 
-    // Обработчики удаления
     document.querySelectorAll('.delete-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.index, 10);
@@ -77,18 +115,16 @@ document.addEventListener('DOMContentLoaded', () => {
       });
     });
 
-    // Обработчики отчёта
     document.querySelectorAll('.report-btn').forEach(btn => {
       btn.addEventListener('click', () => {
         const idx = parseInt(btn.dataset.index, 10);
         const metric = metrics[idx];
-        alert(`Формирование отчёта:\n\nПоказатель: ${metric.name}\nПериод: ${formatPeriod(metric.period)}\nЗначение: ${metric.value}`);
-        // 🔜 Здесь вы позже добавите свою логику (PDF, API и т.д.)
+        generateReport(metric);
       });
     });
   }
 
-  // Экспорт в JSON
+  // === ЭКСПОРТ / ИМПОРТ / ОЧИСТКА ===
   exportBtn.addEventListener('click', () => {
     const dataStr = JSON.stringify(metrics, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
@@ -104,17 +140,14 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 0);
   });
 
-  // Импорт из JSON
   importFile.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
-
     const reader = new FileReader();
     reader.onload = (event) => {
       try {
         const loaded = JSON.parse(event.target.result);
         if (Array.isArray(loaded)) {
-          // Валидация: name и value — строки, period — формат YYYY-MM
           const valid = loaded.every(m =>
             typeof m.name === 'string' &&
             typeof m.value === 'string' &&
@@ -131,42 +164,37 @@ document.addEventListener('DOMContentLoaded', () => {
       } catch (err) {
         alert('Ошибка при загрузке файла:\n' + err.message);
       }
-      importFile.value = ''; // сбросить выбор
+      importFile.value = '';
     };
     reader.readAsText(file);
   });
 
-  // Очистка всех данных
   clearBtn.addEventListener('click', () => {
-    if (confirm('Вы уверены, что хотите удалить все показатели?')) {
+    if (confirm('Удалить все показатели?')) {
       metrics = [];
       saveMetrics();
     }
   });
 
-  // Добавление нового показателя
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const name = document.getElementById('metricName').value.trim();
-    const value = document.getElementById('metricValue').value.trim(); // ← теперь строка!
+    const value = document.getElementById('metricValue').value.trim();
     const period = document.getElementById('metricPeriod').value;
 
     if (name && value !== '' && period) {
       metrics.push({ name, value, period });
       saveMetrics();
       form.reset();
-      // Вернуть текущий месяц после сброса формы
       document.getElementById('metricPeriod').value = currentMonth;
     }
   });
 
-  // Защита от XSS
   function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
   }
 
-  // Первый рендер
   renderMetrics();
 });

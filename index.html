@@ -9,8 +9,8 @@
 <body>
   <div class="container">
     <header>
-      <h1>Показатели отдела</h1>
-      <p>Ключевые метрики по периодам</p>
+      <h1>Мои показатели</h1>
+      <p>Отслеживайте ключевые метрики по периодам</p>
     </header>
 
     <form id="metricForm" class="form">
@@ -31,6 +31,12 @@
 
     <div id="metricsList" class="metrics-list"></div>
   </div>
+
+  <!-- Библиотеки для генерации .docx -->
+  <script src="https://unpkg.com/pizzip@3.1.1/dist/pizzip.min.js"></script>
+  <script src="https://unpkg.com/pizzip-utils@0.1.6/index.js"></script>
+  <script src="https://unpkg.com/docxtemplater@3.37.4/build/docxtemplater.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
 
   <script src="script.js"></script>
 </body>

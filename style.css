@@ -1,12 +1,10 @@
-/* === ГЛОБАЛЬНЫЕ СТИЛИ === */
 :root {
-  /* Цвета, подобранные под ваш фон (голубой/фиолетовый киберпанк) */
-  --primary: #6a5acd;      /* сиренево-фиолетовый */
-  --primary-dark: #483d8b; /* темнее */
-  --accent: #00f3ff;       /* неоново-голубой */
-  --text-light: #e6f0ff;   /* светлый текст */
+  --primary: #6a5acd;
+  --primary-dark: #483d8b;
+  --accent: #00f3ff;
+  --text-light: #e6f0ff;
   --text-secondary: #cbd6e9;
-  --card-bg: rgba(10, 15, 30, 0.75); /* тёмная полупрозрачная карточка */
+  --card-bg: rgba(10, 15, 30, 0.75);
   --border: rgba(100, 150, 255, 0.3);
 }
 
@@ -27,7 +25,6 @@ body {
   overflow-x: hidden;
 }
 
-/* Полупрозрачный overlay для читаемости */
 body::before {
   content: '';
   position: absolute;
@@ -46,7 +43,6 @@ body::before {
   animation: fadeIn 0.8s ease-out;
 }
 
-/* Анимации */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(20px); }
   to   { opacity: 1; transform: translateY(0); }
@@ -57,7 +53,6 @@ body::before {
   to   { opacity: 1; transform: translateY(0); }
 }
 
-/* Заголовок */
 header {
   text-align: center;
   margin-bottom: 2.5rem;
@@ -82,7 +77,6 @@ header p {
   margin: 0 auto;
 }
 
-/* Форма */
 .form {
   display: flex;
   flex-wrap: wrap;
@@ -127,7 +121,6 @@ header p {
   box-shadow: 0 6px 15px rgba(106, 90, 205, 0.4);
 }
 
-/* Кнопки управления */
 .controls {
   display: flex;
   flex-wrap: wrap;
@@ -174,7 +167,6 @@ header p {
   cursor: pointer;
 }
 
-/* Список показателей */
 .metrics-list {
   display: grid;
   gap: 1.2rem;
@@ -189,6 +181,7 @@ header p {
   border: 1px solid var(--border);
   animation: slideUp 0.5s ease-out both;
   opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
 .metric-card.visible {
@@ -251,7 +244,6 @@ header p {
   transform: scale(1.05);
 }
 
-/* Пустое состояние */
 .empty {
   text-align: center;
   padding: 2rem;
@@ -260,7 +252,6 @@ header p {
   animation: fadeIn 0.6s ease-out;
 }
 
-/* Адаптивность */
 @media (max-width: 600px) {
   .container {
     padding: 1.5rem 0.75rem;
