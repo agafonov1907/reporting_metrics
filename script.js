@@ -27,13 +27,12 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${MONTHS_RU[monthIndex]} ${year}`;
   }
 
-  // === ФОРМАТИРОВАНИЕ ДАТЫ В ВИДЕ: «от «06» февраля 2026 г.» ===
-  function formatOfficialDate(date) {
+  // === ФОРМАТ ДАТЫ: dd.mm.yyyy (например: 06.02.2026) ===
+  function formatDateDDMMYYYY(date) {
     const day = String(date.getDate()).padStart(2, '0');
-    const monthIndex = date.getMonth();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
     const year = date.getFullYear();
-    const monthName = MONTHS_RU[monthIndex].toLowerCase();
-    return `от «${day}» ${monthName} ${year} г.`;
+    return `${day}.${month}.${year}`;
   }
 
   // === ГЕНЕРАЦИЯ .DOCX ОТЧЁТА ===
@@ -47,44 +46,14 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   async function generateReport(metric) {
-  try {
-    console.log('Загрузка шаблона report_template.docx...');
-    const templateContent = await loadTemplate('report_template.docx');
-    
-    const data = {
-      metric_value: metric.value,
-      current_date: formatOfficialDate(new Date())
-    };
+    try {
+      console.log('Загрузка шаблона report_template.docx...');
+      const templateContent = await loadTemplate('report_template.docx');
 
-    const zip = new PizZip(templateContent);
-    const doc = new Docxtemplater(zip, {
-      paragraphLoop: true,
-      lineBreaks: true,
-      nullGetter: () => ''
-    });
-
-    doc.setData(data);
-    doc.render();
-
-    const blob = doc.getZip().generate({
-      type: 'blob',
-      mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-    });
-
-    console.log('Скачивание файла...');
-    saveAs(blob, `Отчёт_ПО_${metric.period}.docx`);
-
-  } catch (error) {
-    let msg = 'Неизвестная ошибка';
-    if (error.properties && error.properties.errors instanceof Array) {
-      msg = error.properties.errors.map(err => err.reason).join('\n');
-    } else {
-      msg = error.message || error.toString();
-    }
-    alert('❌ Ошибка генерации отчёта:\n\n' + msg);
-    console.error('Ошибка генерации:', error);
-  }
-}
+      const data = {
+        metric_value: metric.value,
+        current_date: formatDateDDMMYYYY(new Date())
+      };
 
       const zip = new PizZip(templateContent);
       const doc = new Docxtemplater(zip, {
@@ -101,19 +70,22 @@ document.addEventListener('DOMContentLoaded', () => {
         mimeType: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
       });
 
+      console.log('Скачивание отчёта...');
       saveAs(blob, `Отчёт_ПО_${metric.period}.docx`);
 
     } catch (error) {
-      alert('Ошибка генерации отчёта:\n' + (error.message || error));
-      console.error(error);
+      let msg = 'Неизвестная ошибка';
+      if (error.properties && error.properties.errors instanceof Array) {
+        msg = error.properties.errors.map(err => err.reason).join('\n');
+      } else {
+        msg = error.message || error.toString();
+      }
+      alert('❌ Ошибка генерации отчёта:\n\n' + msg);
+      console.error('Ошибка:', error);
     }
   }
 
-  function sanitizeFilename(name) {
-    return name.replace(/[<>:"/\\|?*]/g, '_').substring(0, 50);
-  }
-
-  // === РЕНДЕРИНГ ===
+  // === РЕНДЕРИНГ КАРТОЧЕК ===
   function renderMetrics() {
     metricsList.innerHTML = '';
     if (metrics.length === 0) {
