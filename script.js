@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', () => {
     return `${MONTHS_RU[monthIndex]} ${year}`;
   }
 
-  // === ЗАГРУЗКА ШАБЛОНА ЧЕРЕЗ FETCH ===
+  // Загрузка шаблона через fetch
   function loadTemplate(url) {
     return fetch(url)
       .then(response => {
@@ -38,7 +38,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
   }
 
-  // === ГЕНЕРАЦИЯ ОТЧЁТА ===
+  // Генерация отчёта
   async function generateReport(metric) {
     try {
       const templateArrayBuffer = await loadTemplate('report_template.docx');
@@ -71,7 +71,6 @@ document.addEventListener('DOMContentLoaded', () => {
         throw new Error('Сгенерированный файл пуст');
       }
 
-      // Скачивание через ссылку
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
@@ -93,7 +92,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
-  // === РЕНДЕРИНГ КАРТОЧЕК ===
+  // Рендеринг карточек
   function renderMetrics() {
     metricsList.innerHTML = '';
     if (metrics.length === 0) {
@@ -142,7 +141,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // === ЭКСПОРТ / ИМПОРТ / ОЧИСТКА ===
+  // Экспорт
   exportBtn.addEventListener('click', () => {
     const dataStr = JSON.stringify(metrics, null, 2);
     const blob = new Blob([dataStr], { type: 'application/json' });
@@ -158,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }, 0);
   });
 
+  // Импорт
   importFile.addEventListener('change', (e) => {
     const file = e.target.files[0];
     if (!file) return;
@@ -187,6 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     reader.readAsText(file);
   });
 
+  // Очистка
   clearBtn.addEventListener('click', () => {
     if (confirm('Удалить все показатели?')) {
       metrics = [];
@@ -194,6 +195,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
+  // Добавление
   form.addEventListener('submit', (e) => {
     e.preventDefault();
     const name = document.getElementById('metricName').value.trim();
