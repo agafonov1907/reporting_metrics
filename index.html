@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Мои показатели</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>Показатели отдела</h1>
+      <p>Ключевые метрики по периодам</p>
+    </header>
+
+    <form id="metricForm" class="form">
+      <input type="text" id="metricName" placeholder="Название показателя" required />
+      <input type="text" id="metricValue" placeholder="Значение (цифры, текст, символы...)" required />
+      <input type="month" id="metricPeriod" required />
+      <button type="submit">Добавить</button>
+    </form>
+
+    <div class="controls">
+      <button id="exportBtn" class="btn secondary">📤 Сохранить как JSON</button>
+      <label for="importFile" class="btn secondary file-label">
+        📥 Загрузить из JSON
+        <input type="file" id="importFile" accept=".json" hidden />
+      </label>
+      <button id="clearBtn" class="btn danger">🗑️ Очистить всё</button>
+    </div>
+
+    <div id="metricsList" class="metrics-list"></div>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>
