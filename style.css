@@ -32,7 +32,8 @@ body::before {
   left: 0;
   width: 100%;
   height: 100%;
-  background: linear-gradient(135deg, rgba(5, 10, 30, 0.85), rgba(10, 20, 40, 0.95));
+  /* Сделали overlay светлее */
+  background: linear-gradient(135deg, rgba(10, 20, 40, 0.65), rgba(15, 25, 50, 0.8));
   z-index: -1;
 }
 
@@ -86,6 +87,7 @@ header p {
 }
 
 .form input,
+.form select,
 .form button {
   padding: 0.85rem 1.2rem;
   border: 1px solid var(--border);
@@ -97,15 +99,17 @@ header p {
 }
 
 .form input:focus,
+.form select:focus,
 .form button:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 2px rgba(0, 243, 255, 0.3);
 }
 
-.form input {
+.form input,
+.form select {
   flex: 1;
-  min-width: 200px;
+  min-width: 160px;
 }
 
 .form button {
@@ -167,11 +171,63 @@ header p {
   cursor: pointer;
 }
 
-.metrics-list {
-  display: grid;
+/* === СТИЛИ ДЛЯ РАЗДЕЛОВ === */
+.sections-container {
+  display: flex;
+  flex-direction: column;
   gap: 1.2rem;
 }
 
+.section-header {
+  background: rgba(30, 40, 70, 0.6);
+  padding: 1rem 1.5rem;
+  border-radius: 12px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--border);
+  transition: all 0.3s ease;
+  backdrop-filter: blur(6px);
+}
+
+.section-header:hover {
+  background: rgba(40, 50, 90, 0.7);
+  transform: translateY(-1px);
+}
+
+.section-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #fff;
+}
+
+.section-count {
+  background: var(--primary);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.9rem;
+}
+
+.section-content {
+  display: grid;
+  gap: 1rem;
+  margin-top: 1rem;
+  padding: 0 1rem;
+  animation: fadeInSection 0.4s ease;
+}
+
+@keyframes fadeInSection {
+  from { opacity: 0; max-height: 0; padding: 0 1rem; }
+  to   { opacity: 1; max-height: 1000px; padding: 0 1rem; }
+}
+
+.section-content.collapsed {
+  display: none;
+}
+
+/* === СТИЛИ КАРТОЧЕК === */
 .metric-card {
   background: var(--card-bg);
   padding: 1.5rem;
@@ -179,17 +235,12 @@ header p {
   box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
   backdrop-filter: blur(10px);
   border: 1px solid var(--border);
-  animation: slideUp 0.5s ease-out both;
   opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .metric-card.visible {
   opacity: 1;
-}
-
-.metric-card > div:first-child {
-  flex: 1;
 }
 
 .metric-name {

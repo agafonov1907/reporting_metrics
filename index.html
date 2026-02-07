@@ -10,13 +10,23 @@
   <div class="container">
     <header>
       <h1>Мои показатели</h1>
-      <p>Отслеживайте ключевые метрики по периодам</p>
+      <p>Отслеживайте ключевые метрики по периодам и разделам</p>
     </header>
 
     <form id="metricForm" class="form">
       <input type="text" id="metricName" placeholder="Название показателя" required />
-      <input type="text" id="metricValue" placeholder="Значение (цифры, текст, символы...)" required />
+      <input type="text" id="metricValue" placeholder="Значение" required />
       <input type="month" id="metricPeriod" required />
+      
+      <!-- Выбор раздела -->
+      <select id="metricSection" required>
+        <option value="">Выберите раздел</option>
+        <option value="po">РП Ц5 "Отечественные решения"</option>
+        <option value="kpi">KPI цифровизации</option>
+        <option value="municipal">Муниципальные услуги</option>
+        <option value="other">Прочее</option>
+      </select>
+
       <button type="submit">Добавить</button>
     </form>
 
@@ -27,19 +37,17 @@
         <input type="file" id="importFile" accept=".json" hidden />
       </label>
       <button id="clearBtn" class="btn danger">🗑️ Очистить всё</button>
+      <button id="generateSummaryBtn" class="btn secondary">📊 Сводный отчёт</button>
     </div>
 
-    <div id="metricsList" class="metrics-list"></div>
+    <!-- Контейнер для разделов -->
+    <div id="sectionsContainer" class="sections-container"></div>
   </div>
 
-  <!-- ИСПРАВЛЕННЫЙ ПОРЯДОК СКРИПТОВ -->
-  <!-- Сначала Pizzip -->
+  <!-- Библиотеки для генерации .docx -->
   <script src="https://cdn.jsdelivr.net/npm/pizzip@3.1.6/dist/pizzip.min.js"></script>
-  
-  <!-- Затем Docxtemplater -->
   <script src="https://cdn.jsdelivr.net/npm/docxtemplater@3.42.0/build/docxtemplater.js"></script>
-  
-  <!-- Ваш основной скрипт -->
+
   <script src="script.js"></script>
 </body>
 </html>
