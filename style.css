@@ -330,3 +330,38 @@ header p {
     font-size: 1.3rem;
   }
 }
+
+.form select {
+  padding: 0.85rem 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  font-size: 1rem;
+  background: rgba(20, 30, 50, 0.6);
+  color: var(--text-light);
+  transition: all 0.3s ease;
+
+  /* Убираем стандартную стрелку */
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+
+  /* Добавляем свою стрелку (опционально) */
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' fill='rgba(100,150,255,0.5)' viewBox='0 0 16 16'%3e%3cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 16px;
+  padding-right: 2.5rem; /* чтобы текст не наезжал на стрелку */
+}
+
+.form select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(0, 243, 255, 0.3);
+}
+
+/* Для Firefox — дополнительная настройка */
+@-moz-document url-prefix() {
+  .form select {
+    padding-right: 1.2rem; /* Firefox не поддерживает кастомную стрелку, оставим стандартную */
+  }
+}
